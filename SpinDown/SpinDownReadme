@@ -1,0 +1,7 @@
+Edited 2019 KDS
+
+Notes:
+- Check that the device name in NI Max matches the name in s.addAnalogInputChannel
+- Check that the input port is correct in s.addAnalogInputChannel
+
+If you need to stop the program, use Ctrl-C. Then, shutdown and restart Matlab before attempting to take data again.
