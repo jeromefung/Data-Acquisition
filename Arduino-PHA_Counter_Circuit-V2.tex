@@ -1,0 +1,179 @@
+\documentclass[landscape]{article}
+\usepackage[margin=1in,left=.75in,top=.75in]{geometry}
+\usepackage{amsmath}
+\usepackage{tikz}
+\usepackage{mystuff}
+
+\newcommand*\circled[1]{\tikz[baseline=(char.base)]{
+            \node[shape=circle,draw,inner sep=2pt] (char) {#1};}}
+
+\begin{document}
+\thispagestyle{empty}
+\begin{center}
+\Large Arduino Interface to Nuclear Rack\\ For Pulse Height Analyzer and Counter
+\end{center}
+\vspace{.25in}
+\begin{center}
+\begin{tikzpicture}[font=\scriptsize,>=stealth]
+%
+% Labels
+	\draw[<->] (-4.5,6) -- (-.5,6)node[midway,above]{Input Conditioning}
+		node[midway, below]{Overvoltage Protection};
+	\draw[<->] (0,6) -- (4.5,6)node[midway,above]{555 Timer}
+		node[midway,below]{\SI{1}{\micro\s} delay};
+	\draw[<->] (5,6) -- (9,6)node[midway,above]{74LS76}
+		node[midway,below]{JK Flip-Flop};
+	\draw[<->] (9.5,6)--(12.5,6)node[midway,above]{LF398}
+		node[midway,below]{Sample/Hold Amplifier};
+%
+%	% Linear Gate output
+	\draw (-4.5,4.3)node[left]{Linear Gate};
+	\draw (-4.5,4) \sigin{OUTPUT} to [R=220](-1.,4);
+	\draw[fill=black!5] (-4,4) circle (.2); 
+	\draw[fill=black] (-4,4) circle(.05)
+			node[above=1ex]{``A''}  ++(0,-.2)node[ground]{};
+	\draw (-1,2.8)node[ground]{} to [myzener](-1,3.7) to (-1,4) [fill] circle(.05)
+			 (-1.5,3.1)node[rotate=90]{5.1V Zener};
+	% input to Sample/Hold Amp
+	\draw (-1,4) -- (10,4); 
+	% DIP pin numbers
+	%\draw (-3.2,4)node[below]{\circled{3}};
+	%\draw (-2.2,4)node[below]{\circled{14}};
+	%\draw (-.7,3.5)node[right]{\circled{13}};
+	
+% 	% Linear Gate Busy signal
+	\draw (-4.5,-2)node[left]{Linear Gate BUSY};
+	\draw (-4.5,-2.3)node[left]{-- OR --~~~~~~~~~~};
+	\draw (-4.5,-2.3)\sigin{} to [R=220](-1.,-2.3) -- (14,-2.3)\sigout{To Arduino D5} 
+			(14,-2.6)node[right]{(Counter)};
+	\draw (-4.5,-2.6)node[left]{Discriminator Output};
+	\draw[fill=black!5] (-4,-2.3) circle (.2);
+	\draw[fill=black] (-4,-2.3) circle(.05) node[above=1ex]{``D''}  ++(0,-0.2)node[ground]{};
+	\draw (-1,-3.5)node[ground]{} to [myzener](-1,-2.6) to (-1, -2.3) [fill]circle(.05)
+			(-1.5,-3.2)node[rotate=90]{5.1V Zener};
+
+% 555 one-shot
+	\draw[thick,fill=black!5]	(2,0) rectangle (3.5,1.6);
+	\draw (2.5,1.6) -- ++(0,.375) -- ++ (-1.25,0) -- ++(0,-.75) -- ++(.75,0)
+		  (3,1.6) -- ++ (0,.75)\pin{+5};
+	\draw (2,.75) -- ++ (-.375,0) -- ++(0,-.375) -- ++(.375,0);
+	
+	\draw (.25,2.5) \pin{+5} [R,l_=\SI{220}{\ohm}] to (.25,.75) [C=\SI{4700}{\pico\farad}]
+		 to (.25,-.25) node[ground]{};
+	\draw (.25,.75)  -- (1.75,.75);
+	\draw[fill] (.25,.75) circle(.05)   (1.625,.75) circle(.05);
+	
+	\draw (2.5,-1) node[ground]{} -- (2.5,0);
+	\draw (3,0) to [C=\SI{1000}{\pico\farad}] (3,-1) -- (2.5,-1) [fill] circle(.05) ;
+	
+	\draw (2.5,0) node[below left=-.4ex]{1}  node[above=-.2ex]{\tiny GND}
+		(3,0) node[below left=-.4ex]{5} node[above=-.2ex]{\tiny ~CTL}
+		(2.5,1.6) node[above left=-.4ex]{4} node[below=-.4ex]{\tiny$\overline{\mbox{RES}}$}
+		(3,1.6) node[above left=-.4ex]{8} node[below=-.2ex]{\tiny ~$V_{CC}$}
+		(2,1.2) node[above left=-.4ex]{2} node[right=-.2em]{\tiny TRIG}
+		(2,.8) node[above left=-.4ex]{6}  node[right=-.2em]{\tiny THR}
+		(2,.4) node[above left=-.4ex]{7} node[right=-.2em]{\tiny DIS}
+		;
+	\draw (3.5,.8) node[above right=-.4ex]{3} node[left]{\tiny OUT} ;
+	
+	\draw (1.25,1.23) -- (1.25,-2.3) [fill] (1.25,1.23) circle(.05) (1.25,-2.3) circle(.05);
+% connect to flip-flop	
+	\draw (3.5, .8) -- (5.84,.8);
+%
+% Flip-flop
+	\draw[thick,fill=black!5] (6,0) rectangle (8,1.6) ;
+	\draw (5.92,.8) circle(.08) % clock
+		(6.5,1.68) circle(.08)  % set
+		(6.5,-.08) circle(.08)   % clear
+		(8.08,1.2)circle(.08);% Qbar
+	\draw[thick] (6,.9) -- (6.1,.8) -- (6,.7);
+	\draw (5.5,-.5) node[ground]{} |- (6,.4)node[right=-.2em]{\tiny K} node[above left=-.4ex]{4};
+	\draw (5.5,2.26) \pin{+5} |- (6,1.2)node[right=-.2em]{\tiny J} node[above left=-.4ex]{16};
+	\draw (6.1,.8)node[right=-.2em]{\tiny Clk};
+	\draw (6.5,1.76) -- ++(0,.5)\pin{+5};
+	\draw (6.5,1.6)node[below=-.4ex]{\tiny$\overline{\mbox{Set}}$}
+		(6.5,0) node[above=-.4ex]{\tiny$\overline{\mbox{Clr}}$};
+	\draw (8,1.2)node[left=-.4ex]{\tiny$\overline{\mbox{Q}}$}
+		  (8,0.4)node[left=-.4ex]{\tiny Q};
+	\draw (7.375,1.6)node[below=-.4ex]{\tiny$V_{CC}$} -- ++(0,.66)\pin{+5};
+	\draw (7.375,-.15) node[ground]{} -- (7.375,0) node[above=-.2em]{\tiny GND};
+	
+	\draw (8.16,1.2) --++ (1,0)node[right]{$\overline{\mbox{HOLD}}$} |- (10,3.2);
+	
+	\draw (14,-1)node[buffer,rotate=180]{}node[right]{From Arduino D13} -| (6.5,-.16) 
+		  (14,-1.3)node[right]{(LED)};
+	
+	\draw (6.5,1.76)node[right]{2}
+		  (7.35,1.76)node[right]{5}
+		  (8.,1.2) node[above right]{14}
+		  (8,0.4) node[above right=-.2ex]{15}
+		  (7.375,0)node[below right=-.2ex]{13}
+		  (6.5,0)node[below right=-.1ex]{3}
+		  (5.92,.8)node[above left=-.2ex]{1};
+
+	\draw (8,.4) -- (14,.4)node[buffer]{} node[right]{To Arduino D2}
+		(14, .1)node[right]{(Interrupt)};
+%
+% Sample/Hold amplifier
+	\draw[thick,fill=black!5] (10,2.8)--(12,3.6)--(10,4.4)--cycle;
+	\draw (10.5,4.2)node[above=.3em,right=-.3em]{1}--(10.5,4.8)\pin{$+15$V} 
+		(10.5,3)node[below=1ex,left=-.3em]{4}--(10.5,2.4)\pinbelow{$-15$V};
+	\draw (11.5,3.4)node[below=.8ex,right=-.3em]{6} [C=\SI{.005}{\micro\farad}] to (11.5,2.4) node[ground]{};
+	\draw (11,3.2)node[below=1.2ex,left=-.3em]{7}--(11,2.5)--(11.5,2.5);
+	\fill     (11.5,2.5) circle(0.05);
+	\draw (10,3.2)node[above=.7ex,left=-.2em]{8};
+	\draw (11.7,2.6)node[right]{Tantalum};
+	\draw (10,4)node[above=.7ex,left=-.2em]{3};
+	\draw (12,3.6)node[above=.9ex,right=-.2em]{5}--(14,3.6)\sigout{to Arduino A3} (14,3.3)node[right]{(Analog input)};
+%
+% DC/DC voltage converter
+	\begin{scope}[shift={(-1.5,0)}]
+		\draw[thick,fill=black!5] (4,-4) rectangle (5,-6);
+		\draw (4,-4.5)node[above left]{1} -| (3.5,-4) \pin{+5};
+		\draw (4,-5.5)node[above left]{2}  -| (3.5,-6)node[ground]{};
+		\draw (5,-4.3)node[above right]{6} -- ++(1,0)\sigout{+15V};
+		\draw (5,-5) node[above right]{5} -- ++(1,0)node[ground]{};
+		\draw (5,-5.7) node[above right]{4} -- ++(1,0)\sigout{-15V};
+		\draw[<->] (3,-7) -- (6.75,-7) node[midway,above]{Recom RY-0515D} node[midway,below]{DC/DC Converter};
+		\draw[thick] (3.1,-3.9) -- (3.0,-4) -- (3.0,-6)node[midway,left]{Power from Arduino} -- (3.1,-6.1);
+		\draw[thick] (6.9,-3.9) -- (7,-4)--(7,-6)node[midway,right]{Power to LF398} -- (6.9,-6.1);
+	\end{scope}
+%
+% DIP header for components
+	\begin{scope}[shift={(10,-4.7)},every node/.style={scale=0.5,font=\large}]
+		\draw[thick,fill=black!5] (-.3,.2) rectangle (3.8,0.8);
+		\draw (0,0)    to [R] (0,1) 
+			(.5,0)    to [myzener] (.5,1)
+			(1,0) 	    to [R] (1,1)
+			(1.5,0)  to [myzener] (1.5,1)
+			(2,0)     to [R] (2,1)
+			(2.5,0) to [C] (2.5,1)
+			(3,0)    to [C] (3,1)
+			(3.5,0) to [C] (3.5,1)
+			;
+		\foreach[count=\i, evaluate=\i as \y using int(17-\i)] \x in {1,2,...,8} {
+			\draw (-.5+\x/2,0) node[below]{\large\x};
+			\draw (-.5+\x/2,1) node[above]{\large\y};
+			}
+		\draw
+			(0.0,-.25) node[right,rotate=-90]{\SI{220}{\ohm} Input Cond.}
+			(0.5,-.25) node[right,rotate=-90]{\SI{5.1}{\volt} Zener}
+			(1.0,-.25) node[right,rotate=-90]{\SI{220}{\ohm} Input Cond.}
+			(1.5,-.25) node[right,rotate=-90]{\SI{5.1}{\volt} Zener}
+			(2.0,-.25) node[right,rotate=-90]{\SI{220}{\ohm} on 555}
+			(2.5,-.25) node[right,rotate=-90]{\SI{4700}{\pico\farad} on 555}
+			(3.0,-.25) node[right,rotate=-90]{\SI{1000}{\pico\farad} on 555}
+			(3.5,-.25) node[right,rotate=-90]{\SI{0.005}{\micro\farad} Tantalum}
+			;
+		\draw[<->] (-.3,-2.3) -- (3.8,-2.3)node[midway,above]{DIP Header}
+				node[midway,below]{for components};
+	\end{scope}
+	
+\end{tikzpicture}
+\end{center}
+
+
+\vfill
+%\hfill
+Dan Briotta, 03/27/2018
+\end{document}
