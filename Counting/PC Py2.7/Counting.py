@@ -1,23 +1,27 @@
 #!C:\\Python27\python.exe
-# runs under Windows, Python 2.7 + wxPython + numpy + matplotlib + PySerial
+# runs under Windows, Python 3.9 + wxPython + PySerial
 #
+'''
 ####----------------------------------------------------------------------
 ####
 #### Nuclear Counter in Python
 ####     Use with Arduino Uno program Counting.ino
 ####	   or with test program TestCounting.ino
 ####
+	Author: Dan Briotta
+	Modified by Jerome Fung to work with Python 3
 ####----------------------------------------------------------------------
+'''
 
 import wx
 if (wx.__version__[0]=='4'):
 	import wx.adv
 import os
-import matplotlib
-matplotlib.use('WXAgg')
-import matplotlib.figure as plt
-from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
-import numpy as np
+#import matplotlib
+#matplotlib.use('WXAgg')
+#import matplotlib.figure as plt
+#from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
+#import numpy as np
 import serial
 import serial.tools.list_ports
 import sys
@@ -127,11 +131,11 @@ class MainWindow(wx.Frame):
 		####	self.datacount = self.datacount+1
 		####	self.logger.AppendText(str(self.datacount)+"\n")
 		if self.ser.inWaiting()>0:
-			ins = self.ser.read(self.ser.inWaiting())
+			ins = self.ser.read(self.ser.inWaiting()).decode('utf-8')
 			data = (self.remains + ins).split()
 			#### check remains carried properly:
 			#print "("+self.remains+")"+ins.split()[0]+"="+data[0]+","+data[1]
-			if (ins[-1] <> "\n"):
+			if (ins[-1] != "\n"):
 				self.remains = data.pop()
 			else:
 				self.remains = ""
@@ -141,7 +145,7 @@ class MainWindow(wx.Frame):
 				if (self.rbox.GetSelection()):
 					self.datacount = self.datacount+1
 					if (self.datacount >= self.datamax):
-						self.ser.write('s') # stop Uno data stream
+						self.ser.write('s'.encode('utf-8')) # stop Uno data stream
 						self.counting=False
 						self.gobutton.SetLabel("Go")
 						self.gobutton.SetValue(0)
@@ -150,11 +154,11 @@ class MainWindow(wx.Frame):
 	def onRadioBox(self,event):
 		#print "Radio box selection = ",self.rbox.GetSelection()
 		if (self.rbox.GetSelection() == 0):
-			print "Mode = Free Run"
+			print("Mode = Free Run")
 			#self.intervalinput.SetValue(str(1000))
 		else:
-			print "Mode = Collect Data"
-		self.ser.write('s') # stop Uno data stream
+			print("Mode = Collect Data")
+		self.ser.write('s'.encode('utf-8')) # stop Uno data stream
 		self.counting=False
 		self.gobutton.SetLabel("Go")
 		self.gobutton.SetValue(0)
@@ -162,22 +166,23 @@ class MainWindow(wx.Frame):
 	def onGoButton(self,event):
 		global remains,counting
 		if (self.counting):
-			self.ser.write('s')
+			self.ser.write('s'.encode('utf-8'))
 			self.counting=False
 			self.gobutton.SetLabel("Go")
 			self.gobutton.SetValue(0)
 		else:
-			print "Go..."
+			print("Go...")
 			#print self.logger.GetValue()
-			print "Time = ",self.intervalinput.GetValue()
-			print "Number = ",self.countinput.GetValue()
+			print("Time = ",self.intervalinput.GetValue())
+			print("Number = ",self.countinput.GetValue())
 			self.logger.SetValue("")
 			self.datacount = 0
 			#
 			self.datacount = 0
 			self.datamax = int(self.countinput.GetValue())
 			self.remains=""
-			self.ser.write('s'+str(self.intervalinput.GetValue())+'g')
+			#print(self.intervalinput.GetValue())
+			self.ser.write(('s'+str(self.intervalinput.GetValue())+'g').encode('utf-8'))
 			self.counting=True
 			self.gobutton.SetLabel("Stop")
 			self.gobutton.SetValue(1)
@@ -191,7 +196,7 @@ class MainWindow(wx.Frame):
 			inFile = dlg.GetPath()
 			dlg.Destroy()
 			if result == wx.ID_OK:			#Save button was pressed
-				print "Saving data to",inFile
+				print("Saving data to",inFile)
 				filehandle = open(inFile,'w')
 				filehandle.write(self.logger.GetValue())
 				filehandle.close()
@@ -210,8 +215,8 @@ class MainWindow(wx.Frame):
 	#----------------------------------------------------------------------
 	def	onQuit(self,event):
 		self.Unbind(wx.EVT_IDLE)
-		self.ser.write('s') # stop Uno data stream
-		print "Quitting..."
+		self.ser.write('s'.encode('utf-8')) # stop Uno data stream
+		print("Quitting...")
 		self.Destroy()
 ####----------------------------------------------------------------------
 ####
@@ -249,11 +254,11 @@ class MainWindow(wx.Frame):
 		self.ser.reset_input_buffer()
 		self.ClearBuffer()
 		self.ser.dtr=True; # this will reset the Uno and restart program
-		print "Waiting for Arduino to start:"
+		print("Waiting for Arduino to start:")
 ###		self.ser.write('?') 		# Get Uno program ID				
 		ch = self.ser.read(3)[0:3]
-		print "ch = *"+ch+"*"
-		if (ch == "CNT"):
+		print("ch = *"+ch.decode()+"*")
+		if (ch.decode() == "CNT"):
 			print("Uno Counting program ready...")
 		else:
 			print("Uno counting program not found!");
@@ -265,10 +270,10 @@ class MainWindow(wx.Frame):
 # 		while (ch <> 'C'):
 # 		    ch = self.ser.read(1)
 		#print "Uno ready."
-		self.ser.write('s') ## make sure stopped
+		self.ser.write('s'.encode('utf-8')) ## make sure stopped
 		self.unoMsg = "Connected to UNO on port: "+self.unoPort
 		#self.unoPort = unoPort
-		print self.unoMsg
+		print(self.unoMsg)
 	#----------------------------------------------------------------------
 	#----------------------------------------------------------------------
 	def ClearBuffer(self):
