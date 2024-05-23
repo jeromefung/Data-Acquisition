@@ -145,7 +145,7 @@ class MainWindow(wx.Frame):
 # 			sys.exit("Uno PHA program not found! -- Quitting")
 		#### turn on the idle event to collect data
 		self.Bind(wx.EVT_IDLE, self.OnIdle) # for data collection!
-		print "Data collection started..."
+		print("Data collection started...")
 		#### Tell Uno to start collecting data
 		self.draw()
 		self.startbutton.Disable()
@@ -156,14 +156,14 @@ class MainWindow(wx.Frame):
 		self.stopItem.Enable(True)
 		self.saveItem.Enable(False)
 		self.quitItem.Enable(False)
-		self.ser.write('g') # start data stream
+		self.ser.write('g'.encode('utf-8')) # start data stream
 		#print "Sent a 'g'."
 		self.remains=''
 	#----------------------------------------------------------------------
 	def OnStop (self,event):
 		#print "Stop Event"
-		self.ser.write('s') # stop Uno data stream
-		print "Data Collection stopped."
+		self.ser.write('s'.encode('utf-8')) # stop Uno data stream
+		print("Data Collection stopped.")
 		#print "Sent a 's'."
 		self.Unbind(wx.EVT_IDLE)
 		self.startbutton.Enable()
@@ -198,19 +198,19 @@ class MainWindow(wx.Frame):
 		inFile = dlg.GetPath()
 		dlg.Destroy()
 		if result == wx.ID_OK:			#Save button was pressed
-			print "Saving data to",inFile
+			print("Saving data to",inFile)
 			np.savetxt(inFile,yyy,fmt='%d')
 			self.savebutton.Disable()
 			self.saveItem.Enable(False)
 			#self.Close(True)
 			#self.Destroy()
 		elif result == wx.ID_CANCEL:	#Cancel button was pressed
-			print "Save data cancelled."
+			print("Save data cancelled.")
 	#----------------------------------------------------------------------
 	def OnQuit(self,event):
 		self.Unbind(wx.EVT_IDLE)
-		self.ser.write('s') # stop Uno data stream
-		print "Quitting..."
+		self.ser.write('s'.encode('utf-8')) # stop Uno data stream
+		print("Quitting...")
 		self.Destroy()
 	#----------------------------------------------------------------------		
 	def OnAboutBox(self,event):
@@ -232,10 +232,10 @@ class MainWindow(wx.Frame):
 		global yyy #, remains
 		if self.ser.inWaiting()>0:
 			ins = self.ser.read(self.ser.inWaiting())
-			data = (self.remains + ins).split()
+			data = (self.remains + ins.decode()).split()
 			#### check remains carried properly:
 			#print "("+self.remains+")"+ins.split()[0]+"="+data[0]+","+data[1]
-			if (ins[-1] <> "\n"):
+			if (ins[-1] != "\n"):
 				self.remains = data.pop()
 			else:
 				self.remains = ""
@@ -307,11 +307,11 @@ class MainWindow(wx.Frame):
 		self.ser.reset_input_buffer()
 		self.ClearBuffer()
 		self.ser.dtr=True; # this will reset the Uno and restart program
-		print "Waiting for Arduino to start:"
-		self.ser.write('?') 		# Get Uno program ID				
+		print("Waiting for Arduino to start:")
+		self.ser.write('?'.encode('utf-8')) 		# Get Uno program ID				
 		ch = self.ser.read(3)[0:3]
-		print "ch = *"+ch+"*"
-		if (ch == "PHA"):
+		print("ch = *"+ch.decode()+"*")
+		if (ch.decode() == "PHA"):
 			print("Uno PHA ready...")
 		else:
 			print("Uno PHA not found!");
@@ -321,7 +321,7 @@ class MainWindow(wx.Frame):
 			sys.exit("Uno PHA program not found! -- Quitting")
 		self.unoMsg = "Connected to UNO on port: "+self.unoPort
 		#self.unoPort = unoPort
-		print self.unoMsg
+		print(self.unoMsg)
 	#----------------------------------------------------------------------
 	#----------------------------------------------------------------------
 	def ClearBuffer(self):
